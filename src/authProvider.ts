@@ -9,11 +9,11 @@ import { DateTime } from "luxon";
 export const TOKEN_KEY = "refine-auth";
 
 export const authProvider: AuthProvider = {
-  login: async ({ phone, code, otpSecret }) => {
+  login: async ({ login, password, otpSecret }) => {
     try {
       let query = gql`
         mutation {
-          verifyOtp(phone: "${phone}", otp: "${code}", verificationKey: "${otpSecret}") {
+          login(login: "${login}", password: "${password}") {
             access {
             additionalPermissions
             roles {
@@ -45,18 +45,18 @@ export const authProvider: AuthProvider = {
       `;
       const data = await client.request(query);
       let expirationAddition = parseInt(
-        ms(data.verifyOtp.token.accessTokenExpires)
+        ms(data.login.token.accessTokenExpires)
       );
       let expiration = DateTime.local().plus({
         milliseconds: expirationAddition,
       });
-      data.verifyOtp.token.expirationMillis = expiration.toMillis();
-      let credentials = JSON.stringify(data.verifyOtp);
-      let password = process.env.REACT_APP_CRYPTO_KEY!;
-      const encrypted = AES.encrypt(credentials, password).toString();
+      data.login.token.expirationMillis = expiration.toMillis();
+      let credentials = JSON.stringify(data.login);
+      let pass = process.env.REACT_APP_CRYPTO_KEY!;
+      const encrypted = AES.encrypt(credentials, pass).toString();
 
       localStorage.setItem(TOKEN_KEY, encrypted);
-      return Promise.resolve(data.verifyOtp);
+      return Promise.resolve(data.login);
     } catch (e: any) {
       return Promise.reject(
         e.response.errors.map((e: any) => e.message).join("\n")

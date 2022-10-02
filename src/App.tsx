@@ -3,6 +3,7 @@ import {
   notificationProvider,
   Layout,
   ErrorComponent,
+  Typography,
 } from "@pankod/refine-antd";
 
 import "@pankod/refine-antd/dist/styles.min.css";
@@ -54,6 +55,8 @@ import { OrdersList } from "pages/orders";
 import { OrdersShow } from "pages/orders/show";
 import { ApiTokensCreate, ApiTokensList } from "pages/api_tokens";
 import { AES, enc } from "crypto-js";
+
+const { Title } = Typography;
 const gqlDataProvider = dataProvider(client);
 
 const { Link } = routerProvider;
@@ -106,11 +109,13 @@ function App() {
         Header={Header}
         Title={() => (
           <Link to="/" style={{ width: "100%" }}>
-            <img
-              src="/images/logo-white.svg"
-              alt="Refine"
-              style={{ width: "80%", margin: "0 auto", display: "block" }}
-            />
+            <Title
+              style={{
+                color: "white",
+              }}
+            >
+              MEDUZA
+            </Title>
           </Link>
         )}
         resources={[
