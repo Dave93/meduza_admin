@@ -55,6 +55,7 @@ import { OrdersList } from "pages/orders";
 import { OrdersShow } from "pages/orders/show";
 import { ApiTokensCreate, ApiTokensList } from "pages/api_tokens";
 import { AES, enc } from "crypto-js";
+import { CustomersCreate } from "pages/customers/create";
 
 const { Title } = Typography;
 const gqlDataProvider = dataProvider(client);
@@ -136,6 +137,7 @@ function App() {
             parentName: "orders-group",
             list: CustomersList,
             show: CustomersShow,
+            create: CustomersCreate,
           },
           {
             name: "order_status",
@@ -194,66 +196,30 @@ function App() {
               label: "Список пользователей",
             },
           },
-          {
-            name: "organizations_menu",
-            options: {
-              label: "Организации",
-            },
-          },
-          {
-            name: "organization",
-            parentName: "organizations_menu",
-            options: {
-              label: "Список организации",
-            },
-            list: OrganizationList,
-            create: OrganizationsCreate,
-            edit: OrganizationsEdit,
-          },
-          {
-            name: "terminals",
-            parentName: "organizations_menu",
-            options: {
-              label: "Филиалы",
-            },
-            list: TerminalsList,
-            create: TerminalsCreate,
-            edit: TerminalsEdit,
-          },
-          {
-            name: "delivery_pricing",
-            parentName: "organizations_menu",
-            options: {
-              label: "Условия доставки",
-            },
-            list: DeliveryPricingList,
-            create: DeliveryPricingCreate,
-            edit: DeliveryPricingEdit,
-          },
-          {
-            name: "time_management",
-            options: {
-              label: "Время и отчёты",
-            },
-          },
-          {
-            name: "work_schedules",
-            parentName: "time_management",
-            options: {
-              label: "Рабочие графики",
-            },
-            list: WorkSchedulesList,
-            create: WorkSchedulesCreate,
-            edit: WorkSchedulesEdit,
-          },
-          {
-            name: "work_schedule_entries_report",
-            parentName: "time_management",
-            options: {
-              label: "Отчёт по рабочим графикам",
-            },
-            list: WorkSchedulesReport,
-          },
+          // {
+          //   name: "time_management",
+          //   options: {
+          //     label: "Время и отчёты",
+          //   },
+          // },
+          // {
+          //   name: "work_schedules",
+          //   parentName: "time_management",
+          //   options: {
+          //     label: "Рабочие графики",
+          //   },
+          //   list: WorkSchedulesList,
+          //   create: WorkSchedulesCreate,
+          //   edit: WorkSchedulesEdit,
+          // },
+          // {
+          //   name: "work_schedule_entries_report",
+          //   parentName: "time_management",
+          //   options: {
+          //     label: "Отчёт по рабочим графикам",
+          //   },
+          //   list: WorkSchedulesReport,
+          // },
           {
             name: "settings",
             options: {

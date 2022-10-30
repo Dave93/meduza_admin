@@ -31,9 +31,6 @@ export const OrderStatusList: React.FC = () => {
         "cancel",
         "waiting",
         "need_location",
-        {
-          order_status_organization: ["id", "name"],
-        },
       ],
       whereInputType: "order_statusWhereInput!",
       orderByInputType: "order_statusOrderByWithRelationInput!",
@@ -49,13 +46,6 @@ export const OrderStatusList: React.FC = () => {
         <Table {...tableProps} rowKey="id">
           <Table.Column dataIndex="sort" title="Сортировка" />
           <Table.Column dataIndex="name" title="Название" />
-          <Table.Column
-            dataIndex="organization.name"
-            title="Организация"
-            render={(value: any, record: IOrderStatus) =>
-              record.order_status_organization.name
-            }
-          />
           <Table.Column
             dataIndex="finish"
             title="Завершающий"

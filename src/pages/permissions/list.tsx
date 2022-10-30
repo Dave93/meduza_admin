@@ -42,7 +42,7 @@ export const PermissionsList: React.FC = () => {
   const { tableProps } = useTable<IPermissions>({
     initialSorter: [
       {
-        field: "created_at",
+        field: "slug",
         order: "desc",
       },
     ],

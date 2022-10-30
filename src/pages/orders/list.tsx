@@ -21,7 +21,7 @@ import {
 import { client } from "graphConnect";
 import { gql } from "graphql-request";
 
-import { IOrders, IOrderStatus, IOrganization, ITerminals } from "interfaces";
+import { IOrders, IOrderStatus, ITerminals } from "interfaces";
 import { chain } from "lodash";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
@@ -39,8 +39,6 @@ export const OrdersList: React.FC = () => {
   const { data: identity } = useGetIdentity<{
     token: { accessToken: string };
   }>();
-  const [organizations, setOrganizations] = useState<IOrganization[]>([]);
-  const [terminals, setTerminals] = useState<any[]>([]);
   const [orderStatuses, setOrderStatuses] = useState<any[]>([]);
 
   const { show } = useNavigation();
@@ -71,10 +69,6 @@ export const OrdersList: React.FC = () => {
         "duration",
         "delivery_price",
         "payment_type",
-
-        {
-          orders_organization: ["id", "name"],
-        },
         {
           orders_couriers: ["id", "first_name", "last_name"],
         },
@@ -83,9 +77,6 @@ export const OrdersList: React.FC = () => {
         },
         {
           orders_order_status: ["id", "name", "color"],
-        },
-        {
-          orders_terminals: ["id", "name"],
         },
       ],
       whereInputType: "ordersWhereInput!",
@@ -108,7 +99,7 @@ export const OrdersList: React.FC = () => {
     ],
     onSearch: async (params) => {
       const filters: CrudFilters = [];
-      const { organization_id, created_at, terminal_id } = params;
+      const { created_at } = params;
 
       filters.push(
         {
@@ -123,26 +114,6 @@ export const OrdersList: React.FC = () => {
         }
       );
 
-      if (organization_id) {
-        filters.push({
-          field: "organization_id",
-          operator: "eq",
-          value: {
-            equals: organization_id,
-          },
-        });
-      }
-
-      if (terminal_id) {
-        filters.push({
-          field: "terminal_id",
-          operator: "eq",
-          value: {
-            equals: terminal_id,
-          },
-        });
-      }
-
       return filters;
     },
   });
@@ -150,60 +121,17 @@ export const OrdersList: React.FC = () => {
   const getAllFilterData = async () => {
     const query = gql`
       query {
-        cachedOrganizations {
-          id
-          name
-        }
-        cachedTerminals {
-          id
-          name
-          organization_id
-          organization {
-            id
-            name
-          }
-        }
         cachedOrderStatuses {
           id
           name
           color
-          organization_id
-          order_status_organization {
-            id
-            name
-          }
         }
       }
     `;
-    const { cachedOrganizations, cachedTerminals, cachedOrderStatuses } =
-      await client.request<{
-        cachedOrganizations: IOrganization[];
-        cachedTerminals: ITerminals[];
-        cachedOrderStatuses: IOrderStatus[];
-      }>(query, {}, { Authorization: `Bearer ${identity?.token.accessToken}` });
-    setOrganizations(cachedOrganizations);
-    var terminalRes = chain(cachedTerminals)
-      .groupBy("organization.name")
-      .toPairs()
-      .map(function (item) {
-        return {
-          name: item[0],
-          children: item[1],
-        };
-      })
-      .value();
-    var orderStatusRes = chain(cachedOrderStatuses)
-      .groupBy("order_status_organization.name")
-      .toPairs()
-      .map(function (item) {
-        return {
-          name: item[0],
-          children: item[1],
-        };
-      })
-      .value();
-    setTerminals(terminalRes);
-    setOrderStatuses(orderStatusRes);
+    const { cachedOrderStatuses } = await client.request<{
+      cachedOrderStatuses: IOrderStatus[];
+    }>(query, {}, { Authorization: `Bearer ${identity?.token.accessToken}` });
+    setOrderStatuses(cachedOrderStatuses);
   };
 
   const goToCustomer = (id: string) => {
@@ -212,13 +140,6 @@ export const OrdersList: React.FC = () => {
 
   const goToCourier = (id: string) => {
     show(`users`, id);
-  };
-
-  const goToTerminal = (id: string) => {
-    show(`terminals`, id);
-  };
-  const goToOrganization = (id: string) => {
-    show(`organization`, id);
   };
 
   useEffect(() => {
@@ -241,41 +162,12 @@ export const OrdersList: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={6}>
-              <Form.Item name="organization_id" label="Организация">
-                <Select
-                  options={organizations.map((org) => ({
-                    label: org.name,
-                    value: org.id,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={6}>
-              <Form.Item name="terminal_id" label="Филиал">
-                <Select showSearch optionFilterProp="children" allowClear>
-                  {terminals.map((terminal: any) => (
-                    <Select.OptGroup key={terminal.name} label={terminal.name}>
-                      {terminal.children.map((terminal: ITerminals) => (
-                        <Select.Option key={terminal.id} value={terminal.id}>
-                          {terminal.name}
-                        </Select.Option>
-                      ))}
-                    </Select.OptGroup>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={6}>
               <Form.Item name="order_status_id" label="Статус">
                 <Select showSearch optionFilterProp="children" allowClear>
                   {orderStatuses.map((terminal: any) => (
-                    <Select.OptGroup key={terminal.name} label={terminal.name}>
-                      {terminal.children.map((terminal: ITerminals) => (
-                        <Select.Option key={terminal.id} value={terminal.id}>
-                          {terminal.name}
-                        </Select.Option>
-                      ))}
-                    </Select.OptGroup>
+                    <Select.Option key={terminal.id} value={terminal.id}>
+                      {terminal.name}
+                    </Select.Option>
                   ))}
                 </Select>
               </Form.Item>
@@ -313,32 +205,6 @@ export const OrdersList: React.FC = () => {
               <Tag color={record.orders_order_status.color}>
                 {record.orders_order_status.name}
               </Tag>
-            )}
-          />
-          <Table.Column
-            dataIndex="organization.name"
-            title="Организация"
-            render={(value: any, record: IOrders) => (
-              <Button
-                type="link"
-                size="small"
-                onClick={() => goToOrganization(record.orders_organization.id)}
-              >
-                {record.orders_organization.name}
-              </Button>
-            )}
-          />
-          <Table.Column
-            dataIndex="orders_terminals.name"
-            title="Филиал"
-            render={(value: any, record: IOrders) => (
-              <Button
-                type="link"
-                size="small"
-                onClick={() => goToTerminal(record.orders_terminals.id)}
-              >
-                {record.orders_terminals.name}
-              </Button>
             )}
           />
           <Table.Column
@@ -390,22 +256,6 @@ export const OrdersList: React.FC = () => {
             render={(value: any, record: IOrders) => (
               <span>
                 {new Intl.NumberFormat("ru").format(record.order_price)} сум
-              </span>
-            )}
-          />
-          <Table.Column
-            dataIndex="duration"
-            title="Время доставки"
-            render={(value: any, record: IOrders) => (
-              <span>{dayjs.duration(value * 1000).format("HH:mm:ss")}</span>
-            )}
-          />
-          <Table.Column
-            dataIndex="delivery_price"
-            title="Цена доставки"
-            render={(value: any, record: IOrders) => (
-              <span>
-                {new Intl.NumberFormat("ru").format(record.delivery_price)} сум
               </span>
             )}
           />

@@ -23,50 +23,13 @@ export const OrderStatusCreate = () => {
   }>();
   const { formProps, saveButtonProps } = useForm<IOrderStatus>({
     metaData: {
-      fields: [
-        "id",
-        "name",
-        "sort",
-        "color",
-        "organization_id",
-        "finish",
-        "cancel",
-        "waiting",
-      ],
+      fields: ["id", "name", "sort", "color", "finish", "cancel", "waiting"],
       pluralize: true,
       requestHeaders: {
         Authorization: `Bearer ${identity?.token.accessToken}`,
       },
     },
   });
-
-  const [organizations, setOrganizations] = useState<IOrganization[]>([]);
-
-  const fetchOrganizations = async () => {
-    const query = gql`
-      query {
-        cachedOrganizations {
-          id
-          name
-        }
-      }
-    `;
-
-    const { cachedOrganizations } = await client.request<{
-      cachedOrganizations: IOrganization[];
-    }>(
-      query,
-      {},
-      {
-        Authorization: `Bearer ${identity?.token.accessToken}`,
-      }
-    );
-    setOrganizations(cachedOrganizations);
-  };
-
-  useEffect(() => {
-    fetchOrganizations();
-  }, [identity]);
 
   return (
     <Create saveButtonProps={saveButtonProps} title="Создать статус заказа">
@@ -83,25 +46,6 @@ export const OrderStatusCreate = () => {
               ]}
             >
               <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Организация"
-              name="organization_id"
-              rules={[
-                {
-                  required: true,
-                },
-              ]}
-            >
-              <Select showSearch optionFilterProp="children">
-                {organizations.map((organization) => (
-                  <Select.Option key={organization.id} value={organization.id}>
-                    {organization.name}
-                  </Select.Option>
-                ))}
-              </Select>
             </Form.Item>
           </Col>
         </Row>

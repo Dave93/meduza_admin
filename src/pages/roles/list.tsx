@@ -20,8 +20,8 @@ export const RolesList: React.FC = () => {
   const { tableProps } = useTable<IRoles>({
     initialSorter: [
       {
-        field: "name",
-        order: "desc",
+        field: "code",
+        order: "asc",
       },
     ],
     metaData: {
