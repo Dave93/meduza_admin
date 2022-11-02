@@ -9,32 +9,43 @@ import {
   Switch,
   useForm,
 } from "@pankod/refine-antd";
-import { useTranslate } from "@pankod/refine-core";
+import { useGetIdentity, useTranslate } from "@pankod/refine-core";
 
-import { IOrderStatus, IOrganization } from "interfaces";
+import { ICustomers, IOrderStatus, IOrganization } from "interfaces";
 import { Colorpicker } from "antd-colorpicker";
 import { useEffect, useState } from "react";
 import { gql } from "graphql-request";
 import { client } from "graphConnect";
+import DebounceSelect from "components/select/customerSelect";
 
-export const OrderStatusCreate = () => {
+export const OrdersCreate = () => {
+  const { data: identity } = useGetIdentity<{
+    token: { accessToken: string };
+  }>();
   const { formProps, saveButtonProps } = useForm<IOrderStatus>({
     metaData: {
       fields: [
         "id",
-        "name",
-        "sort",
-        "color",
-        "organization_id",
-        "finish",
-        "cancel",
-        "waiting",
+        "delivery_type",
+        "created_at",
+        "order_price",
+        "order_number",
+        "duration",
+        "delivery_price",
+        "payment_type",
+        {
+          orders_couriers: ["id", "first_name", "last_name"],
+        },
+        {
+          orders_customers: ["id", "name", "phone"],
+        },
+        {
+          orders_order_status: ["id", "name", "color"],
+        },
       ],
       pluralize: true,
     },
   });
-
-  const tr = useTranslate();
 
   const [organizations, setOrganizations] = useState<IOrganization[]>([]);
 
@@ -54,25 +65,66 @@ export const OrderStatusCreate = () => {
     setOrganizations(cachedOrganizations);
   };
 
+  const fetchCustomer = async (queryText: string) => {
+    const query = gql`
+        query {
+          customers(where: {
+            OR: [{
+              name: {
+                contains: "${queryText}"
+              }
+            }, {
+              phone: {
+                contains: "${queryText}"
+              }
+            }]
+          }) {
+            id
+            name
+            phone
+          }
+        }
+    `;
+    const { customers } = await client.request<{
+      customers: ICustomers[];
+    }>(
+      query,
+      {},
+      {
+        Authorization: `Bearer ${identity?.token.accessToken}`,
+      }
+    );
+
+    return customers.map((customer) => ({
+      key: customer.id,
+      value: customer.id,
+      label: `${customer.name} (${customer.phone})`,
+    }));
+  };
+
   useEffect(() => {
     fetchOrganizations();
   }, []);
 
   return (
-    <Create saveButtonProps={saveButtonProps} title="Создать разрешение">
+    <Create saveButtonProps={saveButtonProps} title="Добавить заказ">
       <Form {...formProps} layout="vertical">
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="Название"
-              name="name"
+              label="Клиент"
+              name="customer_id"
               rules={[
                 {
                   required: true,
                 },
               ]}
             >
-              <Input />
+              <DebounceSelect
+                fetchOptions={fetchCustomer}
+                showSearch
+                allowClear
+              />
             </Form.Item>
           </Col>
           <Col span={12}>
