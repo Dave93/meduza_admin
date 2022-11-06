@@ -158,11 +158,16 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
 
       const operation = metaData?.operation ?? camelCreateName;
 
+      const resVariables = {
+        ...variables,
+        ...metaData?.defaultValues,
+      };
+
       const { query, variables: gqlVariables } = gql.mutation({
         operation,
         variables: {
           data: {
-            value: variables,
+            value: resVariables,
             type: metaData?.pluralize
               ? `${pluralCreateInputName}Input`
               : `${camelCreateInputName}Input`,
@@ -228,13 +233,18 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
       let updateInputName = `${resource}UpdateInput`;
       const whereInputName = `${resource}WhereUniqueInput`;
 
+      const resVariables = {
+        ...variables,
+        ...metaData?.defaultValues,
+      };
+
       const operation = metaData?.updateOperation ?? camelUpdateName;
       updateInputName = metaData?.updateInputName ?? updateInputName;
       const { query, variables: gqlVariables } = gql.mutation({
         operation,
         variables: {
           where: { value: { id }, type: whereInputName, required: true },
-          data: { value: variables, type: updateInputName, required: true },
+          data: { value: resVariables, type: updateInputName, required: true },
         },
         fields: metaData?.fields ?? ["id"],
       });

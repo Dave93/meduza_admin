@@ -465,3 +465,63 @@ export class IApiTokens {
 
   api_tokens_organization?: organization;
 }
+
+export class IProductCategories {
+  id: string;
+
+  name: string;
+
+  description?: string;
+
+  sort?: number;
+
+  active: boolean;
+
+  is_additional: boolean;
+
+  created_at: Date;
+
+  updated_at: Date;
+
+  created_by: string | null;
+
+  updated_by: string | null;
+}
+
+export class IProducts {
+  id: string;
+
+  name: string;
+
+  description: string;
+
+  price: number;
+
+  product_category_id: string;
+
+  active: boolean;
+
+  sort: number;
+
+  created_at: Date;
+
+  updated_at: Date;
+
+  created_by: string | null;
+
+  updated_by: string | null;
+
+  products_created_byTousers?: users | null;
+
+  products_updated_byTousers?: users | null;
+
+  products_product_categories?: product_categories;
+}
+
+export class ISystemConfigs {
+  id: string;
+
+  name: string;
+
+  value: string;
+}

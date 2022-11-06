@@ -56,6 +56,8 @@ import { OrdersShow } from "pages/orders/show";
 import { ApiTokensCreate, ApiTokensList } from "pages/api_tokens";
 import { AES, enc } from "crypto-js";
 import { CustomersCreate } from "pages/customers/create";
+import { CatalogList } from "pages/catalog/list";
+import { SystemConfigsList } from "pages/system_configs/list";
 
 const { Title } = Typography;
 const gqlDataProvider = dataProvider(client);
@@ -122,6 +124,13 @@ function App() {
         resources={[
           {
             name: "home",
+          },
+          {
+            name: "catalog",
+            options: {
+              label: "Каталог",
+            },
+            list: CatalogList,
           },
           {
             name: "orders-group",
@@ -235,6 +244,14 @@ function App() {
             },
             list: ApiTokensList,
             create: ApiTokensCreate,
+          },
+          {
+            name: "system_configs",
+            parentName: "settings",
+            options: {
+              label: "Системные настройки",
+            },
+            list: SystemConfigsList,
           },
         ]}
       />
