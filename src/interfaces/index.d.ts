@@ -525,3 +525,15 @@ export class ISystemConfigs {
 
   value: string;
 }
+
+export class ICouriers {
+  id: string;
+
+  name: string;
+
+  phone: string;
+
+  active: boolean;
+
+  password: string;
+}

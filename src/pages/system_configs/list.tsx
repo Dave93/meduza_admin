@@ -10,6 +10,9 @@ import {
   TimePicker,
   useTable,
   Button,
+  Col,
+  Row,
+  InputNumber,
 } from "@pankod/refine-antd";
 import { useGetIdentity } from "@pankod/refine-core";
 import dayjs from "dayjs";
@@ -29,8 +32,33 @@ export const SystemConfigsList: React.FC = () => {
     handleSubmit,
     control,
     register,
+    setValue,
     formState: { errors },
   } = useForm();
+
+  const loadDefaultData = async () => {
+    setIsLoading(true);
+    const { query } = gql.query({
+      operation: "systemConfigs",
+      fields: ["id", "name", "value"],
+    });
+    const data = await client.request(
+      query,
+      {},
+      {
+        Authorization: `Bearer ${identity?.token.accessToken}`,
+      }
+    );
+    setIsLoading(false);
+    console.log(data.systemConfigs);
+    data.systemConfigs.forEach((item: any) => {
+      if (item.name.indexOf("time") !== -1) {
+        setValue(item.name, dayjs(item.value));
+      } else {
+        setValue(item.name, item.value);
+      }
+    });
+  };
 
   const onSubmit = async (data: any) => {
     console.log(data);
@@ -45,7 +73,7 @@ export const SystemConfigsList: React.FC = () => {
       } else {
         formData.push({
           name: key,
-          value: data[key],
+          value: data[key].toString(),
         });
       }
     }
@@ -69,6 +97,10 @@ export const SystemConfigsList: React.FC = () => {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    loadDefaultData();
+  }, []);
+
   return (
     <div>
       <PageHeader title="Системные настройки" ghost={false}>
@@ -84,21 +116,64 @@ export const SystemConfigsList: React.FC = () => {
                 </Space>,
               ]}
             >
-              <Form.Item
-                label="Время начала заказа"
-                rules={[
-                  { required: true, message: "Обязательно для заполнения" },
-                ]}
-              >
-                <Controller
-                  name="order_start_time"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <TimePicker format="HH:mm" {...field} />
-                  )}
-                />
-              </Form.Item>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Время начала заказа"
+                    rules={[
+                      { required: true, message: "Обязательно для заполнения" },
+                    ]}
+                  >
+                    <Controller
+                      name="work_start_time"
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <TimePicker format="HH:mm" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="Время окончания заказа"
+                    rules={[
+                      { required: true, message: "Обязательно для заполнения" },
+                    ]}
+                  >
+                    <Controller
+                      name="work_end_time"
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <TimePicker format="HH:mm" {...field} />
+                      )}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="Время обработки одного заказа"
+                    rules={[
+                      { required: true, message: "Обязательно для заполнения" },
+                    ]}
+                  >
+                    <Controller
+                      name="order_processing_hour"
+                      control={control}
+                      rules={{ required: true }}
+                      render={({ field }) => (
+                        <InputNumber
+                          min={1}
+                          max={24}
+                          addonAfter="ч."
+                          {...field}
+                        />
+                      )}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
             </Card>
           </Form>
         </Spin>

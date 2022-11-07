@@ -58,6 +58,7 @@ import { AES, enc } from "crypto-js";
 import { CustomersCreate } from "pages/customers/create";
 import { CatalogList } from "pages/catalog/list";
 import { SystemConfigsList } from "pages/system_configs/list";
+import { CouriersCreate, CouriersEdit, CouriersList } from "pages/couriers";
 
 const { Title } = Typography;
 const gqlDataProvider = dataProvider(client);
@@ -204,6 +205,16 @@ function App() {
             edit: UsersEdit,
             options: {
               label: "Список пользователей",
+            },
+          },
+          {
+            name: "couriers",
+            parentName: "users-group",
+            list: CouriersList,
+            create: CouriersCreate,
+            edit: CouriersEdit,
+            options: {
+              label: "Курьеры",
             },
           },
           // {

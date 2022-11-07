@@ -1,4 +1,5 @@
 import {
+  Calendar,
   Col,
   Create,
   Form,
@@ -17,6 +18,7 @@ import { useEffect, useState } from "react";
 import { gql } from "graphql-request";
 import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
+import dayjs from "dayjs";
 
 export const OrdersCreate = () => {
   const { data: identity } = useGetIdentity<{
@@ -102,6 +104,10 @@ export const OrdersCreate = () => {
     }));
   };
 
+  const onPanelChange = (value: dayjs.Dayjs) => {
+    console.log(value.format("YYYY-MM-DD"));
+  };
+
   useEffect(() => {
     fetchOrganizations();
   }, []);
@@ -144,6 +150,37 @@ export const OrdersCreate = () => {
                   </Select.Option>
                 ))}
               </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="День доставки"
+              rules={[
+                {
+                  required: true,
+                },
+              ]}
+            >
+              <Calendar
+                fullscreen={false}
+                onPanelChange={onPanelChange}
+                mode="month"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Время доставки"
+              name="delivery_time"
+              rules={[
+                {
+                  required: true,
+                },
+              ]}
+            >
+              <Input />
             </Form.Item>
           </Col>
         </Row>
