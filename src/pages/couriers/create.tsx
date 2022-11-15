@@ -70,7 +70,7 @@ export const CouriersCreate = () => {
             </Form.Item>
           </Col>
           <Col span={4}>
-            <Form.Item label="Пароль">
+            <Form.Item label="Пароль" name="password">
               <Input.Password />
             </Form.Item>
           </Col>
