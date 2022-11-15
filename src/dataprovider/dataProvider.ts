@@ -168,7 +168,9 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
         variables: {
           data: {
             value: resVariables,
-            type: metaData?.pluralize
+            type: metaData?.variableType
+              ? metaData?.variableType
+              : metaData?.pluralize
               ? `${pluralCreateInputName}Input`
               : `${camelCreateInputName}Input`,
             required: true,

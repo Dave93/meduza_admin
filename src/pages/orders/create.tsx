@@ -1,4 +1,5 @@
 import {
+  Button,
   Calendar,
   Col,
   Create,
@@ -7,31 +8,42 @@ import {
   InputNumber,
   Row,
   Select,
+  Space,
   Switch,
   useForm,
 } from "@pankod/refine-antd";
 import { useGetIdentity, useTranslate } from "@pankod/refine-core";
 
-import { ICustomers, IOrderStatus, IOrganization } from "interfaces";
+import {
+  ICustomers,
+  IOrderDateTime,
+  IOrderStatus,
+  IOrganization,
+} from "interfaces";
 import { Colorpicker } from "antd-colorpicker";
 import { useEffect, useState } from "react";
 import { gql } from "graphql-request";
 import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
 import dayjs from "dayjs";
+import LocationSelectorInput from "components/location_selector";
 
 export const OrdersCreate = () => {
   const { data: identity } = useGetIdentity<{
     token: { accessToken: string };
   }>();
-  const { formProps, saveButtonProps } = useForm<IOrderStatus>({
+  const [times, setTimes] = useState<IOrderDateTime[]>([]);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format("YYYY-MM-DD")
+  );
+  const { formProps, saveButtonProps, form } = useForm<IOrderStatus>({
     metaData: {
       fields: [
         "id",
         "delivery_type",
         "created_at",
         "order_price",
-        "order_number",
         "duration",
         "delivery_price",
         "payment_type",
@@ -46,25 +58,24 @@ export const OrdersCreate = () => {
         },
       ],
       pluralize: true,
+      operation: "createNewOrder",
+      variableType: "CreateOrderInput",
     },
   });
 
-  const [organizations, setOrganizations] = useState<IOrganization[]>([]);
-
-  const fetchOrganizations = async () => {
+  const loadTimesToDate = async () => {
     const query = gql`
       query {
-        cachedOrganizations {
-          id
-          name
+        getTimesForDate(date: "${dayjs().format("YYYY-MM-DD")}") {
+          value
         }
       }
     `;
-
-    const { cachedOrganizations } = await client.request<{
-      cachedOrganizations: IOrganization[];
+    const { getTimesForDate } = await client.request<{
+      getTimesForDate: IOrderDateTime[];
     }>(query);
-    setOrganizations(cachedOrganizations);
+    console.log(getTimesForDate);
+    setTimes(getTimesForDate);
   };
 
   const fetchCustomer = async (queryText: string) => {
@@ -73,11 +84,13 @@ export const OrdersCreate = () => {
           customers(where: {
             OR: [{
               name: {
-                contains: "${queryText}"
+                contains: "${queryText}",
+                mode: insensitive
               }
             }, {
               phone: {
-                contains: "${queryText}"
+                contains: "${queryText}",
+                mode: insensitive
               }
             }]
           }) {
@@ -105,11 +118,23 @@ export const OrdersCreate = () => {
   };
 
   const onPanelChange = (value: dayjs.Dayjs) => {
-    console.log(value.format("YYYY-MM-DD"));
+    setSelectedDate(value.format("YYYY-MM-DD"));
+  };
+
+  const selectTime = (value: string) => {
+    setSelectedTime(value);
+    console.log(`${selectedDate} ${value}`);
+    let currentSelectedDate = dayjs(`${selectedDate} ${value}`);
+    console.log(currentSelectedDate.toISOString());
+    form.setFieldsValue({ delivery_time: currentSelectedDate.toDate() });
+  };
+
+  const onSelectAddress = (delivery_address: string) => {
+    form.setFieldsValue({ delivery_address });
   };
 
   useEffect(() => {
-    fetchOrganizations();
+    loadTimesToDate();
   }, []);
 
   return (
@@ -133,30 +158,11 @@ export const OrdersCreate = () => {
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Организация"
-              name="organization_id"
-              rules={[
-                {
-                  required: true,
-                },
-              ]}
-            >
-              <Select showSearch optionFilterProp="children">
-                {organizations.map((organization) => (
-                  <Select.Option key={organization.id} value={organization.id}>
-                    {organization.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
         </Row>
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              label="День доставки"
+              label="День мойки"
               rules={[
                 {
                   required: true,
@@ -172,8 +178,48 @@ export const OrdersCreate = () => {
           </Col>
           <Col span={12}>
             <Form.Item
-              label="Время доставки"
+              label="Время мойки"
               name="delivery_time"
+              rules={[
+                {
+                  required: true,
+                },
+              ]}
+            >
+              <Space>
+                {times.map((time) => (
+                  <Button
+                    key={time.value}
+                    size="small"
+                    type={selectedTime === time.value ? "primary" : "default"}
+                    onClick={() => selectTime(time.value)}
+                  >
+                    {time.value}
+                  </Button>
+                ))}
+              </Space>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Локация"
+              name="location"
+              rules={[
+                {
+                  required: true,
+                },
+              ]}
+            >
+              {/* @ts-ignore */}
+              <LocationSelectorInput onSetAddress={onSelectAddress} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Адрес"
+              name="delivery_address"
               rules={[
                 {
                   required: true,
@@ -185,41 +231,20 @@ export const OrdersCreate = () => {
           </Col>
         </Row>
         <Row gutter={16}>
-          <Col span={4}>
+          <Col span={12}>
             <Form.Item
-              label="Сортировка"
-              name="sort"
+              label="Способ оплаты"
+              name="payment_type"
               rules={[
                 {
                   required: true,
                 },
               ]}
             >
-              <InputNumber />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item label="Цвет" name="color">
-              <Colorpicker popup />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item
-              label="Завершающий"
-              name="finish"
-              valuePropName="checked"
-            >
-              <Switch />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item label="Отменяющий" name="cancel" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-          </Col>
-          <Col span={4}>
-            <Form.Item label="Ожидающий" name="waiting" valuePropName="checked">
-              <Switch />
+              <Select>
+                <Select.Option value="cash">Наличными</Select.Option>
+                <Select.Option value="card">Картой</Select.Option>
+              </Select>
             </Form.Item>
           </Col>
         </Row>

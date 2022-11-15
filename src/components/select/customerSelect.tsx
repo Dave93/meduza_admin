@@ -101,7 +101,6 @@ function DebounceSelect<
   return (
     <>
       <Select
-        labelInValue
         showSearch
         filterOption={false}
         onSearch={debounceFetcher}

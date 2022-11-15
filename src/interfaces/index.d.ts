@@ -537,3 +537,7 @@ export class ICouriers {
 
   password: string;
 }
+
+export class IOrderDateTime {
+  value: string;
+}
