@@ -543,8 +543,8 @@ export class IOrderDateTime {
 }
 
 export class IOrderItems {
-  id: string;
-  order_id: number;
+  id?: string;
+  order_id?: number;
   product_id: string;
   quantity: number;
   price: number;

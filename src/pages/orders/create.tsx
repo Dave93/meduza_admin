@@ -23,6 +23,7 @@ import {
   IOrderItems,
   IOrderStatus,
   IOrganization,
+  IProducts,
 } from "interfaces";
 import { Colorpicker } from "antd-colorpicker";
 import { useEffect, useMemo, useState } from "react";
@@ -31,6 +32,7 @@ import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
 import dayjs from "dayjs";
 import LocationSelectorInput from "components/location_selector";
+import AddOrderItems from "components/orders/addOrderItems";
 
 export const OrdersCreate = () => {
   const { data: identity } = useGetIdentity<{
@@ -41,6 +43,8 @@ export const OrdersCreate = () => {
   const [selectedDate, setSelectedDate] = useState(
     dayjs().format("YYYY-MM-DD")
   );
+  const [selectedProducts, setSelectedProducts] = useState<IOrderItems[]>([]);
+  const [rerenderComponent, setRerenderComponent] = useState<boolean>(false);
   const { formProps, saveButtonProps, form } = useForm<IOrderStatus>({
     metaData: {
       fields: [
@@ -136,6 +140,30 @@ export const OrdersCreate = () => {
     form.setFieldsValue({ delivery_address });
   };
 
+  const onSetProducts = (products: IProducts[]) => {
+    let res = [...selectedProducts];
+    products.forEach((product) => {
+      let index = res.findIndex((p) => p.product_id === product.id);
+      if (index !== -1) {
+        res[index] = {
+          ...res[index],
+          quantity: res[index].quantity + 1,
+          total_price: res[index].total_price * (res[index].quantity + 1),
+        };
+      } else {
+        res.push({
+          product_id: product.id,
+          quantity: 1,
+          price: product.price,
+          total_price: product.price * 1,
+        });
+      }
+    });
+
+    setSelectedProducts(res);
+    setRerenderComponent(!rerenderComponent);
+  };
+
   const columns: ColumnsType<IOrderItems> = [
     {
       title: "Наименование",
@@ -154,10 +182,6 @@ export const OrdersCreate = () => {
       dataIndex: "total_price",
     },
   ];
-
-  const selectedProducts = useMemo(() => {
-    return [];
-  }, []);
 
   useEffect(() => {
     loadTimesToDate();
@@ -275,11 +299,13 @@ export const OrdersCreate = () => {
           </Col>
         </Row>
         <Divider orientation="left">Состав заказа</Divider>
+        <AddOrderItems OnSaveHandler={onSetProducts} />
         <Table
           columns={columns}
           dataSource={selectedProducts}
           pagination={false}
           bordered
+          rowKey="product_id"
         />
       </Form>
     </Create>
