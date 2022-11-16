@@ -20,23 +20,17 @@ import type { ColumnsType } from "antd/es/table";
 import {
   ICustomers,
   IOrderDateTime,
+  IOrderItems,
   IOrderStatus,
   IOrganization,
 } from "interfaces";
 import { Colorpicker } from "antd-colorpicker";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { gql } from "graphql-request";
 import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
 import dayjs from "dayjs";
 import LocationSelectorInput from "components/location_selector";
-
-interface DataType {
-  id: string;
-  name: string;
-  borrow: number;
-  repayment: number;
-}
 
 export const OrdersCreate = () => {
   const { data: identity } = useGetIdentity<{
@@ -84,7 +78,6 @@ export const OrdersCreate = () => {
     const { getTimesForDate } = await client.request<{
       getTimesForDate: IOrderDateTime[];
     }>(query);
-    console.log(getTimesForDate);
     setTimes(getTimesForDate);
   };
 
@@ -143,20 +136,28 @@ export const OrdersCreate = () => {
     form.setFieldsValue({ delivery_address });
   };
 
-  const columns: ColumnsType<DataType> = [
+  const columns: ColumnsType<IOrderItems> = [
     {
-      title: "Name",
-      dataIndex: "name",
+      title: "Наименование",
+      dataIndex: "product_id",
     },
     {
-      title: "Borrow",
-      dataIndex: "borrow",
+      title: "Цена",
+      dataIndex: "price",
     },
     {
-      title: "Repayment",
-      dataIndex: "repayment",
+      title: "Кол-во",
+      dataIndex: "quantity",
+    },
+    {
+      title: "Сумма",
+      dataIndex: "total_price",
     },
   ];
+
+  const selectedProducts = useMemo(() => {
+    return [];
+  }, []);
 
   useEffect(() => {
     loadTimesToDate();
@@ -274,6 +275,12 @@ export const OrdersCreate = () => {
           </Col>
         </Row>
         <Divider orientation="left">Состав заказа</Divider>
+        <Table
+          columns={columns}
+          dataSource={selectedProducts}
+          pagination={false}
+          bordered
+        />
       </Form>
     </Create>
   );

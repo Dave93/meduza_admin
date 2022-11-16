@@ -541,3 +541,12 @@ export class ICouriers {
 export class IOrderDateTime {
   value: string;
 }
+
+export class IOrderItems {
+  id: string;
+  order_id: number;
+  product_id: string;
+  quantity: number;
+  price: number;
+  total_price: number;
+}
