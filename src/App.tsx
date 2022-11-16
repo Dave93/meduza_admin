@@ -59,6 +59,10 @@ import { CustomersCreate } from "pages/customers/create";
 import { CatalogList } from "pages/catalog/list";
 import { SystemConfigsList } from "pages/system_configs/list";
 import { CouriersCreate, CouriersEdit, CouriersList } from "pages/couriers";
+import localeData from "dayjs/plugin/localeData";
+import dayjs from "dayjs";
+
+dayjs.extend(localeData);
 
 const { Title } = Typography;
 const gqlDataProvider = dataProvider(client);
@@ -89,6 +93,14 @@ function App() {
               const {
                 access: { additionalPermissions },
               } = decryptedData;
+
+              const allowedList = ["orders-group", "users-group", "settings"];
+
+              if (allowedList.includes(resource)) {
+                return Promise.resolve({
+                  can: true,
+                });
+              }
               return Promise.resolve({
                 can: additionalPermissions.includes(`${resource}.${action}`),
                 reason: additionalPermissions.includes(`${resource}.${action}`)
@@ -113,13 +125,13 @@ function App() {
         Header={Header}
         Title={() => (
           <Link to="/" style={{ width: "100%" }}>
-            <Title
+            {/* <Title
               style={{
                 color: "white",
               }}
             >
               MEDUZA
-            </Title>
+            </Title> */}
           </Link>
         )}
         resources={[

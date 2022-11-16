@@ -89,13 +89,13 @@ export const Login: React.FC = () => {
               marginBottom: "28px",
             }}
           >
-            <Title
+            {/* <Title
               style={{
                 color: "white",
               }}
             >
               MEDUZA
-            </Title>
+            </Title> */}
           </div>
 
           <Card

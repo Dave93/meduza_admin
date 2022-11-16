@@ -62,10 +62,10 @@ export const OrdersList: React.FC = () => {
     metaData: {
       fields: [
         "id",
+        // "number",
         "delivery_type",
         "created_at",
         "order_price",
-        "order_number",
         "duration",
         "delivery_price",
         "payment_type",
@@ -190,7 +190,7 @@ export const OrdersList: React.FC = () => {
             },
           })}
         >
-          <Table.Column dataIndex="order_number" title="Номер заказа" />
+          <Table.Column dataIndex="id" title="№" />
           <Table.Column
             dataIndex="created_at"
             title="Дата заказа"

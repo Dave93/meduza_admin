@@ -26,7 +26,7 @@ const generateFilter = (filters?: CrudFilters) => {
   const queryFilters: { [key: string]: any } = {};
 
   if (filters) {
-    filters.forEach((filter) => {
+    filters.forEach((filter: any) => {
       if (filter.operator !== "or") {
         const { field, operator, value } = filter;
 
@@ -42,7 +42,7 @@ const generateFilter = (filters?: CrudFilters) => {
         const { value } = filter;
 
         const orFilters: any[] = [];
-        value.forEach((val) => {
+        value.forEach((val: any) => {
           orFilters.push({
             [`${val.field}_${val.operator}`]: val.value,
           });

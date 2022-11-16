@@ -3,6 +3,7 @@ import {
   Calendar,
   Col,
   Create,
+  Divider,
   Form,
   Input,
   InputNumber,
@@ -11,8 +12,10 @@ import {
   Space,
   Switch,
   useForm,
+  Table,
 } from "@pankod/refine-antd";
 import { useGetIdentity, useTranslate } from "@pankod/refine-core";
+import type { ColumnsType } from "antd/es/table";
 
 import {
   ICustomers,
@@ -27,6 +30,13 @@ import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
 import dayjs from "dayjs";
 import LocationSelectorInput from "components/location_selector";
+
+interface DataType {
+  id: string;
+  name: string;
+  borrow: number;
+  repayment: number;
+}
 
 export const OrdersCreate = () => {
   const { data: identity } = useGetIdentity<{
@@ -117,7 +127,7 @@ export const OrdersCreate = () => {
     }));
   };
 
-  const onPanelChange = (value: dayjs.Dayjs) => {
+  const onPanelChange = (value: any) => {
     setSelectedDate(value.format("YYYY-MM-DD"));
   };
 
@@ -132,6 +142,21 @@ export const OrdersCreate = () => {
   const onSelectAddress = (delivery_address: string) => {
     form.setFieldsValue({ delivery_address });
   };
+
+  const columns: ColumnsType<DataType> = [
+    {
+      title: "Name",
+      dataIndex: "name",
+    },
+    {
+      title: "Borrow",
+      dataIndex: "borrow",
+    },
+    {
+      title: "Repayment",
+      dataIndex: "repayment",
+    },
+  ];
 
   useEffect(() => {
     loadTimesToDate();
@@ -248,6 +273,7 @@ export const OrdersCreate = () => {
             </Form.Item>
           </Col>
         </Row>
+        <Divider orientation="left">Состав заказа</Divider>
       </Form>
     </Create>
   );
