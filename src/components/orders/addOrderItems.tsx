@@ -175,7 +175,13 @@ const AddOrderItems: FC<MyInputProps> = ({ OnSaveHandler }) => {
                 />
                 <Table.Column dataIndex="name" title="Название" />
                 <Table.Column dataIndex="description" title="Описание" />
-                <Table.Column dataIndex="price" title="Цена" />
+                <Table.Column
+                  dataIndex="price"
+                  title="Цена"
+                  render={(value) =>
+                    `${new Intl.NumberFormat("ru").format(value)}  сум`
+                  }
+                />
                 <Table.Column<IProducts>
                   title="Действия"
                   dataIndex="actions"

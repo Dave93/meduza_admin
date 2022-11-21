@@ -190,8 +190,10 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
         metaData?.requestHeaders ?? null
       );
 
+      console.log(response[operation]);
+
       return {
-        data: response[operation][singularResource],
+        data: response[operation],
       };
     },
 
@@ -308,6 +310,9 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
         },
         fields: metaData?.fields,
       });
+
+      console.log(query);
+      console.trace();
 
       const response = await client.request(
         query,

@@ -11,6 +11,7 @@ import {
   Row,
   DatePicker,
   Tag,
+  EditButton,
 } from "@pankod/refine-antd";
 import {
   CrudFilters,
@@ -266,6 +267,7 @@ export const OrdersList: React.FC = () => {
             render={(_text, record): React.ReactNode => {
               return (
                 <Space>
+                  <EditButton size="small" recordItemId={record.id} hideText />
                   <ShowButton size="small" recordItemId={record.id} hideText />
                 </Space>
               );

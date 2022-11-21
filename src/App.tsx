@@ -51,7 +51,7 @@ import {
   OrderStatusEdit,
   OrderStatusList,
 } from "pages/order_status";
-import { OrdersCreate, OrdersList } from "pages/orders";
+import { OrdersCreate, OrdersEdit, OrdersList } from "pages/orders";
 import { OrdersShow } from "pages/orders/show";
 import { ApiTokensCreate, ApiTokensList } from "pages/api_tokens";
 import { AES, enc } from "crypto-js";
@@ -180,6 +180,7 @@ function App() {
             list: OrdersList,
             show: OrdersShow,
             create: OrdersCreate,
+            edit: OrdersEdit,
           },
           {
             name: "users-group",

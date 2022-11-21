@@ -14,9 +14,14 @@ import {
   useForm,
   Table,
 } from "@pankod/refine-antd";
-import { useGetIdentity, useTranslate } from "@pankod/refine-core";
+import {
+  useGetIdentity,
+  useNavigation,
+  useTranslate,
+} from "@pankod/refine-core";
 import type { ColumnsType } from "antd/es/table";
 
+import { MinusCircleOutlined, PlusCircleOutlined } from "@ant-design/icons";
 import {
   ICustomers,
   IOrderDateTime,
@@ -28,6 +33,7 @@ import {
 import { Colorpicker } from "antd-colorpicker";
 import { useEffect, useMemo, useState } from "react";
 import { gql } from "graphql-request";
+import * as gqlb from "gql-query-builder";
 import { client } from "graphConnect";
 import DebounceSelect from "components/select/customerSelect";
 import dayjs from "dayjs";
@@ -45,7 +51,35 @@ export const OrdersCreate = () => {
   );
   const [selectedProducts, setSelectedProducts] = useState<IOrderItems[]>([]);
   const [rerenderComponent, setRerenderComponent] = useState<boolean>(false);
+
+  const { list } = useNavigation();
+
+  const onSaveSuccess = (data: any, values: any, context: any) => {
+    const { query, variables } = gqlb.mutation({
+      operation: "assignOrderItem",
+      variables: {
+        id: {
+          value: +data.data.id,
+          type: "Int",
+          required: true,
+        },
+        order_items: {
+          type: "[order_itemsInput!]",
+          value: selectedProducts,
+          required: true,
+        },
+      },
+      fields: ["id"],
+    });
+
+    const response = client.request(query, variables, {
+      Authorization: `Bearer ${identity?.token.accessToken}`,
+    });
+    list("orders");
+  };
+
   const { formProps, saveButtonProps, form } = useForm<IOrderStatus>({
+    redirect: false,
     metaData: {
       fields: [
         "id",
@@ -69,6 +103,7 @@ export const OrdersCreate = () => {
       operation: "createNewOrder",
       variableType: "CreateOrderInput",
     },
+    onMutationSuccess: onSaveSuccess,
   });
 
   const loadTimesToDate = async () => {
@@ -130,9 +165,7 @@ export const OrdersCreate = () => {
 
   const selectTime = (value: string) => {
     setSelectedTime(value);
-    console.log(`${selectedDate} ${value}`);
     let currentSelectedDate = dayjs(`${selectedDate} ${value}`);
-    console.log(currentSelectedDate.toISOString());
     form.setFieldsValue({ delivery_time: currentSelectedDate.toDate() });
   };
 
@@ -164,6 +197,38 @@ export const OrdersCreate = () => {
     setRerenderComponent(!rerenderComponent);
   };
 
+  const onMinus = (product: IOrderItems) => {
+    let res = [...selectedProducts];
+    let index = res.findIndex((p) => p.product_id === product.product_id);
+    if (index !== -1) {
+      if (res[index].quantity === 1) {
+        res.splice(index, 1);
+      } else {
+        res[index] = {
+          ...res[index],
+          quantity: res[index].quantity - 1,
+          total_price: res[index].total_price * (res[index].quantity - 1),
+        };
+      }
+    }
+    setSelectedProducts(res);
+    setRerenderComponent(!rerenderComponent);
+  };
+
+  const onPlus = (product: IOrderItems) => {
+    let res = [...selectedProducts];
+    let index = res.findIndex((p) => p.product_id === product.product_id);
+    if (index !== -1) {
+      res[index] = {
+        ...res[index],
+        quantity: res[index].quantity + 1,
+        total_price: res[index].total_price * (res[index].quantity + 1),
+      };
+    }
+    setSelectedProducts(res);
+    setRerenderComponent(!rerenderComponent);
+  };
+
   const columns: ColumnsType<IOrderItems> = [
     {
       title: "Наименование",
@@ -176,6 +241,16 @@ export const OrdersCreate = () => {
     {
       title: "Кол-во",
       dataIndex: "quantity",
+      render: (value, record) => (
+        <div>
+          <MinusCircleOutlined
+            twoToneColor="green"
+            onClick={() => onMinus(record)}
+          />
+          <span style={{ margin: "0 10px" }}>{value}</span>
+          <PlusCircleOutlined onClick={() => onPlus(record)} />
+        </div>
+      ),
     },
     {
       title: "Сумма",
