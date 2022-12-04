@@ -16,6 +16,7 @@ import {
 import { useCan, useGetIdentity } from "@pankod/refine-core";
 import { EditOutlined } from "@ant-design/icons";
 import { IProducts } from "interfaces";
+import FileUploader from "components/file_uploader";
 
 interface IProductListProps {
   categoryId: any;
@@ -105,6 +106,7 @@ export const ProductList: React.FC<IProductListProps> = ({ categoryId }) => {
     drawerProps: editDrawerProps,
     saveButtonProps: editSaveButtonProps,
     formProps: editFormProps,
+    id: editId,
   } = useDrawerForm<IProducts>({
     action: "edit",
     redirect: false,
@@ -116,12 +118,10 @@ export const ProductList: React.FC<IProductListProps> = ({ categoryId }) => {
         "description",
         "price",
         "active",
+        "sort",
         "created_at",
-        "product_category_id",
+        "icon",
       ],
-      defaultValues: {
-        product_category_id: categoryId,
-      },
       requestHeaders: {
         Authorization: `Bearer ${identity?.token.accessToken}`,
       },
@@ -252,7 +252,10 @@ export const ProductList: React.FC<IProductListProps> = ({ categoryId }) => {
         </Create>
       </Drawer>
       <Drawer {...editDrawerProps}>
-        <Edit saveButtonProps={editSaveButtonProps} title="Добавление товара">
+        <Edit
+          saveButtonProps={editSaveButtonProps}
+          title="Редактирование товара"
+        >
           <Form {...editFormProps} layout="vertical">
             <Form.Item
               label="Активность"
@@ -298,6 +301,16 @@ export const ProductList: React.FC<IProductListProps> = ({ categoryId }) => {
               ]}
             >
               <InputNumber />
+            </Form.Item>
+            <Form.Item
+              label="Лого"
+              name="icon"
+              style={{
+                height: 200,
+              }}
+            >
+              {/* @ts-ignore */}
+              <FileUploader modelId={editId} />
             </Form.Item>
             <Form.Item label="Описание" name="description">
               <Input.TextArea />
