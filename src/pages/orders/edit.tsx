@@ -94,7 +94,7 @@ export const OrdersEdit: React.FC = () => {
         "delivery_price",
         "payment_type",
         {
-          orders_couriers: ["id", "first_name", "last_name"],
+          orders_couriers: ["id", "name"],
         },
         {
           orders_customers: ["id", "name", "phone"],

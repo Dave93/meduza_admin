@@ -48,7 +48,7 @@ const LocationSelectorInput: FC<MyInputProps> = ({
   value,
   onChange,
   onSetAddress,
-}: MyInputProps) => {
+}) => {
   const [visible, setVisible] = useState(false);
   const map = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
