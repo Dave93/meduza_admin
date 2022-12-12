@@ -26,8 +26,9 @@ const generateFilter = (filters?: CrudFilters) => {
   const queryFilters: { [key: string]: any } = {};
 
   if (filters) {
-    filters.forEach((filter: any) => {
+    filters.forEach((filter) => {
       if (filter.operator !== "or") {
+        /** @ts-ignore */
         const { field, operator, value } = filter;
 
         if (operator === "eq") {
@@ -36,14 +37,21 @@ const generateFilter = (filters?: CrudFilters) => {
           if (!queryFilters[`${field}`]) {
             queryFilters[`${field}`] = {};
           }
-          queryFilters[`${field}`][operator] = value;
+          console.log(typeof value == "object");
+          console.log(value);
+          if (typeof value == "object" && value.custom) {
+            queryFilters[`${field}`] = value.custom;
+          } else {
+            queryFilters[`${field}`][operator] = value;
+          }
         }
       } else {
         const { value } = filter;
 
         const orFilters: any[] = [];
-        value.forEach((val: any) => {
+        value.forEach((val) => {
           orFilters.push({
+            /** @ts-ignore */
             [`${val.field}_${val.operator}`]: val.value,
           });
         });
@@ -67,7 +75,7 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
       metaData,
     }) => {
       const { current = 1, pageSize = 10 } = pagination ?? {};
-
+      console.log("result filter", filters);
       const sortBy = genereteSort(sort);
       const filterBy = generateFilter(filters);
 
@@ -158,19 +166,12 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
 
       const operation = metaData?.operation ?? camelCreateName;
 
-      const resVariables = {
-        ...variables,
-        ...metaData?.defaultValues,
-      };
-
       const { query, variables: gqlVariables } = gql.mutation({
         operation,
         variables: {
           data: {
-            value: resVariables,
-            type: metaData?.variableType
-              ? metaData?.variableType
-              : metaData?.pluralize
+            value: variables,
+            type: metaData?.pluralize
               ? `${pluralCreateInputName}Input`
               : `${camelCreateInputName}Input`,
             required: true,
@@ -190,10 +191,8 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
         metaData?.requestHeaders ?? null
       );
 
-      console.log(response[operation]);
-
       return {
-        data: response[operation],
+        data: response[operation][singularResource],
       };
     },
 
@@ -237,18 +236,13 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
       let updateInputName = `${resource}UpdateInput`;
       const whereInputName = `${resource}WhereUniqueInput`;
 
-      const resVariables = {
-        ...variables,
-        ...metaData?.defaultValues,
-      };
-
       const operation = metaData?.updateOperation ?? camelUpdateName;
       updateInputName = metaData?.updateInputName ?? updateInputName;
       const { query, variables: gqlVariables } = gql.mutation({
         operation,
         variables: {
           where: { value: { id }, type: whereInputName, required: true },
-          data: { value: resVariables, type: updateInputName, required: true },
+          data: { value: variables, type: updateInputName, required: true },
         },
         fields: metaData?.fields ?? ["id"],
       });
@@ -310,9 +304,6 @@ const dataProvider = (client: GraphQLClient): DataProvider => {
         },
         fields: metaData?.fields,
       });
-
-      console.log(query);
-      console.trace();
 
       const response = await client.request(
         query,

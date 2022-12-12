@@ -12,6 +12,7 @@ import {
   DatePicker,
   Tag,
   EditButton,
+  Input,
 } from "@pankod/refine-antd";
 import {
   CrudFilters,
@@ -22,12 +23,20 @@ import {
 import { client } from "graphConnect";
 import { gql } from "graphql-request";
 
-import { IOrders, IOrderStatus, ITerminals } from "interfaces";
+import {
+  ICustomers,
+  IOrders,
+  IOrderStatus,
+  ITerminals,
+  IUsers,
+} from "interfaces";
 import { chain } from "lodash";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
 import duration from "dayjs/plugin/duration";
+import DebounceSelect from "components/select/customerSelect";
+import FetchSelector from "components/select/fetchSelector";
 
 var weekday = require("dayjs/plugin/weekday");
 dayjs.locale("ru");
@@ -51,7 +60,10 @@ export const OrdersList: React.FC = () => {
       organization_id: string;
       created_at: [dayjs.Dayjs, dayjs.Dayjs];
       terminal_id: string;
-      order_status_id: string;
+      order_status_id: string[];
+      customer_phone: string;
+      courier_id: any;
+      id: number;
     }
   >({
     initialSorter: [
@@ -100,7 +112,8 @@ export const OrdersList: React.FC = () => {
     ],
     onSearch: async (params) => {
       const filters: CrudFilters = [];
-      const { created_at } = params;
+      const { created_at, order_status_id, customer_phone, courier_id, id } =
+        params;
 
       filters.push(
         {
@@ -114,6 +127,48 @@ export const OrdersList: React.FC = () => {
           value: created_at ? created_at[1].toISOString() : undefined,
         }
       );
+
+      if (order_status_id && order_status_id.length) {
+        filters.push({
+          field: "order_status_id",
+          operator: "in",
+          value: order_status_id,
+        });
+      }
+
+      if (customer_phone) {
+        filters.push({
+          field: "orders_customers",
+          operator: "contains",
+          value: {
+            custom: {
+              is: {
+                phone: {
+                  contains: customer_phone,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      if (id) {
+        filters.push({
+          field: "id",
+          operator: "eq",
+          value: {
+            equals: +id,
+          },
+        });
+      }
+
+      if (courier_id && courier_id.value) {
+        filters.push({
+          field: "courier_id",
+          operator: "eq",
+          value: { equals: courier_id.value },
+        });
+      }
 
       return filters;
     },
@@ -133,6 +188,54 @@ export const OrdersList: React.FC = () => {
       cachedOrderStatuses: IOrderStatus[];
     }>(query, {}, { Authorization: `Bearer ${identity?.token.accessToken}` });
     setOrderStatuses(cachedOrderStatuses);
+  };
+
+  const fetchCourier = async (queryText: string) => {
+    const query = gql`
+        query {
+          couriers(where: {
+            active: {
+              equals: true
+            },
+            OR: [{
+              name: {
+                contains: "${queryText}"
+                mode: insensitive
+              }
+            }, {
+              phone: {
+                contains: "${queryText}"
+              }
+            }]
+          }) {
+            id
+            name
+            phone
+          }
+        }
+    `;
+    const { couriers } = await client.request<{
+      couriers: ICustomers[];
+    }>(
+      query,
+      {},
+      {
+        Authorization: `Bearer ${identity?.token.accessToken}`,
+      }
+    );
+    console.log(couriers);
+    console.log(
+      couriers.map((user) => ({
+        key: user.id,
+        value: user.id,
+        label: `${user.name} (${user.phone})`,
+      }))
+    );
+    return couriers.map((user) => ({
+      key: user.id,
+      value: user.id,
+      label: `${user.name} (${user.phone})`,
+    }));
   };
 
   const goToCustomer = (id: string) => {
@@ -174,6 +277,23 @@ export const OrdersList: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Form.Item name="customer_phone" label="Телефон клиента">
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="courier_id" label="Мойщик">
+                <FetchSelector fetchOptions={fetchCourier} allowClear />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="id" label="Номер заказа">
+                <Input allowClear />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item>
             <Button htmlType="submit" type="primary">
               Фильтровать
@@ -210,7 +330,7 @@ export const OrdersList: React.FC = () => {
           />
           <Table.Column
             dataIndex="orders_couriers.name"
-            title="Курьер"
+            title="Мойщик"
             render={(value: any, record: IOrders) =>
               record.orders_couriers ? (
                 <Button
